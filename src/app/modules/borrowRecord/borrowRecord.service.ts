@@ -32,6 +32,14 @@ const borrowBookFromDB = async (bookId: string, memberId: string) => {
             throw new NotFoundError(`Sorry, the member with ID ${memberId} could not be found. Please check the ID and try again.`);
         }
 
+        const existingBorrow = await prisma.borrowRecord.findFirst({
+            where: { memberId, bookId, returnDate: null },
+        });
+
+        if (existingBorrow) {
+            throw new BadRequestError(`You have already borrowed this book and have not returned it yet.`);
+        }
+
         await prisma.book.update({
             where: { bookId },
             data: { availableCopies: { decrement: 1 } },
@@ -55,7 +63,44 @@ const borrowBookFromDB = async (bookId: string, memberId: string) => {
     });
 };
 
+const returnBookFromDB = async (borrowId: string) => {
+    if (!isUUID(borrowId)) {
+        throw new BadRequestError("Invalid borrow ID format. Please provide a valid UUID.");
+    }
+    return await prisma.$transaction(async (prisma) => {
+        const borrowRecord = await prisma.borrowRecord.findUnique({
+            where: { borrowId },
+            include: { book: true },
+        });
+
+        if (!borrowRecord) {
+            throw new NotFoundError(`No borrow record found for ID '${borrowId}'. Please check the borrow ID and try again.`);
+        }
+
+        if (borrowRecord.returnDate) {
+            throw new BadRequestError(`This book has already been returned on ${borrowRecord.returnDate}. No further action is required.`);
+        }
+
+        const book = await prisma.book.findUnique({
+            where: { bookId: borrowRecord.bookId },
+        });
+
+        await prisma.borrowRecord.update({
+            where: { borrowId },
+            data: { returnDate: new Date() },
+        });
+
+        const result = await prisma.book.update({
+            where: { bookId: borrowRecord.bookId },
+            data: { availableCopies: { increment: 1 } },
+        });
+
+        return result;
+    });
+};
+
 
 export const BorrowedBookService = {
-    borrowBookFromDB
+    borrowBookFromDB,
+    returnBookFromDB
 };
