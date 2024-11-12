@@ -7,7 +7,7 @@ const globalErrorHandler = (
     req: Request,
     res: Response,
     next: NextFunction
-) => {
+): any => {
 
     if (err instanceof AppError) {
         return res.status(err.statusCode).json({
