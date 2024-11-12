@@ -23,3 +23,14 @@ model Book {
 
   @@map("books")
 }
+
+model Member {
+  memberId       String   @id @default(uuid()) @db.Uuid
+  name           String
+  email          String   @unique
+  phone          String
+  membershipDate DateTime
+  
+  @@map("members")
+}
+
