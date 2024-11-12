@@ -1,6 +1,7 @@
 import prisma from "../../shared/prisma";
 import { validate as isUUID } from 'uuid';
 import { BadRequestError, NotFoundError } from "../../utils/error";
+import { StatusCodes } from "http-status-codes";
 
 const borrowBookFromDB = async (bookId: string, memberId: string) => {
     if (!isUUID(bookId)) {
@@ -100,7 +101,65 @@ const returnBookFromDB = async (borrowId: string) => {
 };
 
 
+const overdueBooksCheck = async () => {
+    const overDueLimitDays = 14;
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - overDueLimitDays);
+    const overdueBooks = await prisma.borrowRecord.findMany({
+        where: {
+            returnDate: null,
+            borrowDate: {
+                lt: cutoffDate,
+            },
+        },
+        select: {
+            borrowId: true,
+            borrowDate: true,
+            book: {
+                select: {
+                    title: true,
+                },
+            },
+            member: {
+                select: {
+                    name: true,
+                },
+            },
+        },
+    });
+
+    if (overdueBooks.length === 0) {
+        return {
+            success: true,
+            status: 200,
+            message: "No overdue books",
+            data: [],
+        };
+    }
+
+    const overdueList = overdueBooks.map((record) => {
+        const overdueDays = Math.max(
+            0,
+            Math.floor((new Date().getTime() - new Date(record.borrowDate).getTime()) / (1000 * 60 * 60 * 24)) - overDueLimitDays
+        );
+        return {
+            borrowId: record.borrowId,
+            bookTitle: record.book.title,
+            borrowerName: record.member.name,
+            overdueDays,
+        };
+    });
+
+    return {
+        success: true,
+        status: StatusCodes.OK,
+        message: "Overdue borrow list fetched",
+        data: overdueList,
+    };
+};
+
 export const BorrowedBookService = {
     borrowBookFromDB,
-    returnBookFromDB
+    returnBookFromDB,
+    overdueBooksCheck
 };
