@@ -18,7 +18,6 @@ This project is built using the following technologies and packages:
 - **Node.js** as the runtime environment
 - **Other Dependencies:**
   - `@prisma/client`: Prisma ORM client
-  - `bcrypt`: Password hashing
   - `cors`: Cross-origin request handling
   - `express`: Web framework
   - `http-status-codes`: Standard HTTP status codes
