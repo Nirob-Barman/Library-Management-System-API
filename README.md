@@ -5,7 +5,7 @@
 The **Library Management System API** is a backend solution that allows the management of books, members, and borrow records for a library. It enables functionalities like adding new books, managing members, borrowing and returning books, and checking overdue borrow records. The API is designed for ease of use and scalability.
 
 ## Live URL
-[Link to the live deployment](#)
+[https://library-management-system-api-six.vercel.app/](#)
 
 ## Technology Stack & Packages
 This project is built using the following technologies and packages:
