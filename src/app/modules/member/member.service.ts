@@ -44,6 +44,11 @@ const createMember = async (payload: any) => {
 
 const getAllMembersFromDB = async () => {
     const members = await prisma.member.findMany();
+
+    if (members.length === 0) {
+        throw new NotFoundError("No members found in the database.");
+    }
+    
     return members;
 };
 

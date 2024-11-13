@@ -43,6 +43,11 @@ const createBook = async (payload: any) => {
 
 const getAllBooksFromDB = async () => {
     const books = await prisma.book.findMany();
+
+    if (books.length === 0) {
+        throw new NotFoundError("No books found in the database.");
+    }
+
     return books;
 };
 
